@@ -10,7 +10,8 @@ apt update -y
 echo "STEP 2: WEB SERVER STATUS"
 MYNAME="Sirisha"
 S3_BUCKET="upgrad-sirisha"
-if command -v apache2 | grep -q '/usr/sbin/apache2'; then
+WEB_SERVER=$(service apache2 status)
+if [[ $WEB_SERVER == *"active (running)"* ]]; then
 	echo "Apache2 exists"
         if service apache2 status | grep -q "Stopping";then
 		echo "Apache2 is stopped, starting the service"
@@ -21,7 +22,7 @@ if command -v apache2 | grep -q '/usr/sbin/apache2'; then
 else
 	echo "Apache2 is being installed"
 	apt install apache2
-	service apache2 start		
+	sudo service apache2 start
 fi
 
 ## Archive web server logs and moving to /tmp
