@@ -37,4 +37,27 @@ done
 
 ## Push the Web server logs to S3
 echo "STEP 4: RECORDING LOGS INTO S3"
-aws s3 cp /tmp/${MYNAME}-http-logs-${TIMESTAMP}.tar s3://${S3_BUCKET}/${MYNAME}-httpd-logs-${TIMESTAMP}.tar
+aws s3 cp /tmp/${MYNAME}-http-logs-${TIMESTAMP}.tar s3://${S3_BUCKET}/${MYNAME}-httpd-logs-${TIMESTAMP}.ta
+
+## Adding inventory file for Web Server
+echo "STEP 5: BOOKKEEPING LOGS"
+INVENTORY_FILE=/var/www/html/inventory.html
+FILE_SIZE=$(ls -lh /tmp/${MYNAME}-http-logs-${TIMESTAMP}.tar | awk '{print  $5}')
+if [ -f "$INVENTORY_FILE" ]; then
+	echo "Inventory File exists. Recording into the inventory now."
+	echo "httpd-logs	${TIMESTAMP}		tar	${FILE_SIZE}" >> ${INVENTORY_FILE}
+else
+	echo "Inventory file not found. Creating inventory.html for web server and Recording the logs into it..."
+	touch ${INVENTORY_FILE} && echo "Log_Type	Time_Created		Type	Size" >> ${INVENTORY_FILE} && echo "httpd-logs      ${TIMESTAMP}         tar     ${FILE_SIZE}" >> ${INVENTORY_FILE}
+fi
+
+## Schedule and Check CronJob Status
+echo "STEP 6: CHECK/SCHEDULE CRONJOB"
+CRON_PATH=/etc/cron.d/automation
+if [ -f "$CRON_PATH" ]; then
+  echo "Cron Job is scheduled."
+else
+  echo "Cron Job is not scheduled. Setting up the CronJob now..."
+  touch ${CRON_PATH} && echo "0 1 * * * root /root/Automation_Project/automation.sh" >> ${CRON_PATH}
+fi
+
